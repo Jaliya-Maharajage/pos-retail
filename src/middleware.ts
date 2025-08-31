@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+export const runtime = 'nodejs';
 
 export default auth((req) => {
   const { nextUrl } = req;

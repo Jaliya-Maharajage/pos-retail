@@ -1,7 +1,7 @@
 // src/app/api/reports/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";  // Your prisma instance
-
+export const runtime = 'nodejs';
 // Fetch daily sales report
 export async function GET(request: Request) {
   try {

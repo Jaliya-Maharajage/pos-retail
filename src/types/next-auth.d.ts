@@ -1,4 +1,5 @@
 import { UserRole } from "@prisma/client";
+export const runtime = 'nodejs';
 
 declare module "next-auth" {
   interface Session {

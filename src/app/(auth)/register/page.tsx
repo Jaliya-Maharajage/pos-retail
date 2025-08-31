@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 
 type Role = "OWNER" | "STAFF";
+export const runtime = 'nodejs';
 
 export default function RegisterPage() {
   const router = useRouter();

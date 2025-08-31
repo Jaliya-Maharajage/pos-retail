@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+export const runtime = 'nodejs';
 
 export default async function PostLogin() {
   const session = await auth();

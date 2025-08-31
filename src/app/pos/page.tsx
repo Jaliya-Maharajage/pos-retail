@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import TileButton from "@/components/ui/tile-button";
 import { toast } from "sonner";
-import BarcodeInput from "@/components/pos/BarcodeInput";
+//import BarcodeInput from "@/components/pos/BarcodeInput";
 import { formatLKR } from "@/lib/utils";
 
 // Define the type for CartItem
