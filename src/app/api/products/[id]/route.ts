@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 export const runtime = "nodejs";
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: any }) {
   try {
     const body = await req.json();
     const updated = await prisma.product.update({
@@ -22,7 +22,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_: Request, { params }: { params: any }) {
   try {
     await prisma.product.delete({ where: { id: params.id } });
     return NextResponse.json({ ok: true });
