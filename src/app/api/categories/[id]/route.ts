@@ -1,33 +1,25 @@
-import { NextResponse } from "next/server";
+// src/app/api/categories/[id]/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
-export const GET = async (
-  _req: Request,
-  { params }: { params: { id: string } }
-) => {
-  const category = await prisma.category.findUnique({ where: { id: params.id } });
+export async function GET(_req: NextRequest, ctx: any) {
+  const { id } = await ctx.params;
+  const category = await prisma.category.findUnique({ where: { id } });
   if (!category) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(category);
-};
+}
 
-export const PUT = async (
-  req: Request,
-  { params }: { params: { id: string } }
-) => {
+export async function PUT(req: NextRequest, ctx: any) {
+  const { id } = await ctx.params;
   const data = await req.json();
-  const updated = await prisma.category.update({
-    where: { id: params.id },
-    data,
-  });
+  const updated = await prisma.category.update({ where: { id }, data });
   return NextResponse.json(updated);
-};
+}
 
-export const DELETE = async (
-  _req: Request,
-  { params }: { params: { id: string } }
-) => {
-  await prisma.category.delete({ where: { id: params.id } });
+export async function DELETE(_req: NextRequest, ctx: any) {
+  const { id } = await ctx.params;
+  await prisma.category.delete({ where: { id } });
   return NextResponse.json({ ok: true });
-};
+}

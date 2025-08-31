@@ -1,27 +1,34 @@
-import { NextResponse } from "next/server";
+// src/app/api/orders/[id]/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
+
 export const runtime = "nodejs";
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, ctx: any) {
+  const { id } = await ctx.params; // handles both Promise|object
   const order = await prisma.order.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { items: { include: { product: true } }, customer: true, staff: true },
   });
   return NextResponse.json({ order });
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, ctx: any) {
   try {
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await ctx.params;
     const body = await req.json();
     const { items, paymentMethod, saleType, totalAmount, status, customerId } = body;
 
     const updated = await prisma.$transaction(async (tx) => {
-      await tx.orderItem.deleteMany({ where: { orderId: params.id } });
+      await tx.orderItem.deleteMany({ where: { orderId: id } });
       await tx.order.update({
-        where: { id: params.id },
+        where: { id },
         data: {
           paymentMethod,
           saleType,
@@ -37,8 +44,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
           },
         },
       });
-      return tx.order.findUnique({ where: { id: params.id } });
+      return tx.order.findUnique({ where: { id } });
     });
+
     return NextResponse.json({ order: updated });
   } catch (e) {
     console.error(e);
@@ -46,33 +54,18 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-// API handler for deleting an order in /api/orders/[id]
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, ctx: any) {
   try {
-    const orderId = params.id;
+    const { id } = await ctx.params;
 
-    // Log the orderId for debugging
-    console.log("Attempting to delete order with id:", orderId);
-
-    // Begin transaction to delete related orderItems and then the order
     await prisma.$transaction(async (tx) => {
-      // Delete the related order items first
-      await tx.orderItem.deleteMany({
-        where: { orderId: orderId },
-      });
-
-      // Now delete the order
-      await tx.order.delete({
-        where: { id: orderId },
-      });
+      await tx.orderItem.deleteMany({ where: { orderId: id } });
+      await tx.order.delete({ where: { id } });
     });
 
-    return new Response(null, { status: 204 }); // No content, successful deletion
+    return new Response(null, { status: 204 });
   } catch (error) {
     console.error("Error deleting order:", error);
     return new Response("Failed to delete order", { status: 500 });
   }
 }
-
-
-
