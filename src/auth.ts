@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import GitHub from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 export const runtime = 'nodejs';
@@ -7,6 +9,10 @@ export const runtime = 'nodejs';
 export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   providers: [
+// Dynamically include OAuth providers if env vars are present
+...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [Google] : []),
+...(process.env.GITHUB_ID && process.env.GITHUB_SECRET ? [GitHub] : []),
+
     Credentials({
       name: "Credentials",
       credentials: { username: {}, password: {} },
