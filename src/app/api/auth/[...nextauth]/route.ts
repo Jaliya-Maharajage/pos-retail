@@ -1,3 +1,4 @@
+// src/app/api/auth/[...nextauth]/route.ts
 import { handlers } from "@/auth";
 export const { GET, POST } = handlers;
-export const runtime = "nodejs"; // Prisma needs Node runtime
+export const runtime = "nodejs";
