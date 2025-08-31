@@ -1,41 +1,62 @@
-// src/auth.ts
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
+import type { UserRole } from "@prisma/client";
 
-// IMPORTANT: do NOT export GET/POST from here. Export `handlers` instead.
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true, // good on Vercel
   session: { strategy: "jwt" },
   providers: [
-    // These OAuth providers auto-enable if you add env vars in Vercel
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [Google] : []),
-    ...(process.env.GITHUB_ID && process.env.GITHUB_SECRET ? [GitHub] : []),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          Google({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+          }),
+        ]
+      : []),
 
-    // Keep your credentials provider
+    ...(process.env.GITHUB_ID && process.env.GITHUB_SECRET
+      ? [
+          GitHub({
+            clientId: process.env.GITHUB_ID!,
+            clientSecret: process.env.GITHUB_SECRET!,
+          }),
+        ]
+      : []),
+
     Credentials({
       name: "Credentials",
       credentials: { username: {}, password: {} },
-      async authorize(creds) {
-        if (!creds?.username || !creds?.password) return null;
-        const user = await prisma.user.findUnique({
-          where: { username: String(creds.username) }
-        });
+      async authorize(credentials, _request) {
+        // Basic guards
+        const username = credentials?.username;
+        const password = credentials?.password;
+        if (typeof username !== "string" || typeof password !== "string")
+          return null;
+
+        const user = await prisma.user.findUnique({ where: { username } });
         if (!user) return null;
-        const ok = await bcrypt.compare(String(creds.password), user.passwordHash);
-        return ok ? { id: user.id, name: user.username, email: user.email, role: user.role } : null;
-      }
+
+        const ok = await bcrypt.compare(password, user.passwordHash);
+        if (!ok) return null;
+
+        // MUST satisfy your augmented `User` type:
+        // include `username` and `role` (and the default fields)
+        return {
+          id: user.id,
+          name: user.username, // NextAuth's default field
+          email: user.email,
+          username: user.username, // <-- required by your augmentation
+          role: user.role as UserRole, // <-- required by your augmentation
+          // image: undefined,            // optional
+        };
+      },
     }),
   ],
 
-  // Keep your callbacks as-is if you already have them
-  // callbacks: {
-  //   async jwt({ token, user }) { ... },
-  //   async session({ session, token }) { ... }
-  // },
+  // callbacks: { jwt, session } // keep yours if you already add role/username to token+session
 });
-
-// DO NOT put `export const runtime = 'nodejs'` here.
-// Put runtime in the API route file (below).

@@ -1,27 +1,28 @@
+// e.g. src/types/next-auth.d.ts
+import NextAuth, { DefaultSession } from "next-auth";
 import { UserRole } from "@prisma/client";
-export const runtime = 'nodejs';
 
 declare module "next-auth" {
-  interface Session {
+  interface Session extends DefaultSession {
     user: {
       id: string;
-      name: string | null;
-      email: string | null;
       username: string;
       role: UserRole;
-    };
+    } & DefaultSession["user"];
   }
+
   interface User {
     id: string;
     username: string;
     role: UserRole;
+    // name, email come from NextAuth's base User (we still set them)
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    role?: UserRole;
-    username?: string;
-    id?: string;
+    id: string;
+    username: string;
+    role: UserRole;
   }
 }
