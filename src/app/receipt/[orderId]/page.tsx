@@ -1,6 +1,6 @@
 "use client";
 
-import { prisma } from "@/lib/prisma"; 
+//import { prisma } from "@/lib/prisma"; 
 import Receipt80mm from "@/components/receipt/Receipt80mm";
 
 export default async function ReceiptPage({ params }: { params: { orderId: string } }) {
