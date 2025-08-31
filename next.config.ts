@@ -5,3 +5,6 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+
+// Added by vercel-prep: images remotePatterns placeholder
