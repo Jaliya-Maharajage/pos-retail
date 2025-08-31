@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 
 export const GET = async (
   _req: Request,
-  { params }: { params: any }
+  { params }: { params: { id: string } }
 ) => {
   const category = await prisma.category.findUnique({ where: { id: params.id } });
   if (!category) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -14,7 +14,7 @@ export const GET = async (
 
 export const PUT = async (
   req: Request,
-  { params }: { params: any }
+  { params }: { params: { id: string } }
 ) => {
   const data = await req.json();
   const updated = await prisma.category.update({
@@ -26,7 +26,7 @@ export const PUT = async (
 
 export const DELETE = async (
   _req: Request,
-  { params }: { params: any }
+  { params }: { params: { id: string } }
 ) => {
   await prisma.category.delete({ where: { id: params.id } });
   return NextResponse.json({ ok: true });

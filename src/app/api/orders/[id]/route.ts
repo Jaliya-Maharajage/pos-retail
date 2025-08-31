@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 export const runtime = "nodejs";
 
-export async function GET(_req: Request, { params }: { params: any }) {
+export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const order = await prisma.order.findUnique({
     where: { id: params.id },
     include: { items: { include: { product: true } }, customer: true, staff: true },
@@ -11,7 +11,7 @@ export async function GET(_req: Request, { params }: { params: any }) {
   return NextResponse.json({ order });
 }
 
-export async function PUT(req: Request, { params }: { params: any }) {
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -47,7 +47,7 @@ export async function PUT(req: Request, { params }: { params: any }) {
 }
 
 // API handler for deleting an order in /api/orders/[id]
-export async function DELETE(req: Request, { params }: { params: any }) {
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
     const orderId = params.id;
 
