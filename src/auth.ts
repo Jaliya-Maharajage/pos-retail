@@ -1,62 +1,76 @@
+// src/auth.ts
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google";
-import GitHub from "next-auth/providers/github";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
-import type { UserRole } from "@prisma/client";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  trustHost: true, // good on Vercel
-  session: { strategy: "jwt" },
+  trustHost: true,
+  session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 7 },
+
+  // Optional: give this app its own cookie name to avoid collisions with other apps on same domain.
+  // If TS complains about `cookies`, you can safely remove this block and rely on defaults.
+  cookies: {
+    sessionToken: {
+      name: "pos-retail.session-token",
+      options: { httpOnly: true, sameSite: "lax", path: "/", secure: true },
+    },
+  },
+
   providers: [
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-      ? [
-          Google({
-            clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-          }),
-        ]
-      : []),
-
-    ...(process.env.GITHUB_ID && process.env.GITHUB_SECRET
-      ? [
-          GitHub({
-            clientId: process.env.GITHUB_ID!,
-            clientSecret: process.env.GITHUB_SECRET!,
-          }),
-        ]
-      : []),
-
     Credentials({
       name: "Credentials",
       credentials: { username: {}, password: {} },
-      async authorize(credentials, _request) {
-        // Basic guards
-        const username = credentials?.username;
-        const password = credentials?.password;
-        if (typeof username !== "string" || typeof password !== "string")
-          return null;
+      // v5 signature: (credentials, request)
+      async authorize(credentials) {
+        const username =
+          typeof credentials?.username === "string" ? credentials.username.trim() : "";
+        const password =
+          typeof credentials?.password === "string" ? credentials.password : "";
 
-        const user = await prisma.user.findUnique({ where: { username } });
+        if (!username || !password) return null;
+
+        // Case-insensitive match to prevent duplicate variants (e.g. "Admin" vs "admin")
+        const user = await prisma.user.findFirst({
+          where: { username: { equals: username, mode: "insensitive" } },
+        });
         if (!user) return null;
 
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
 
-        // MUST satisfy your augmented `User` type:
-        // include `username` and `role` (and the default fields)
+        // Return the shape your app expects (you augmented `User` to include username/role)
         return {
           id: user.id,
-          name: user.username, // NextAuth's default field
-          email: user.email,
-          username: user.username, // <-- required by your augmentation
-          role: user.role as UserRole, // <-- required by your augmentation
-          // image: undefined,            // optional
-        };
+          name: user.username,        // NextAuth "name"
+          email: user.email ?? null,
+          username: user.username,    // your augmentation
+          role: user.role,            // your augmentation
+        } as any;
       },
     }),
+    // Re-add Google/GitHub later if needed; for now keep surface small while debugging.
   ],
 
-  // callbacks: { jwt, session } // keep yours if you already add role/username to token+session
+  callbacks: {
+    async jwt({ token, user }) {
+      // On fresh sign-in, overwrite identity fields to prevent stale user tokens
+      if (user) {
+        token.id = (user as any).id;
+        token.username = (user as any).username ?? (user as any).name;
+        token.role = (user as any).role ?? null;
+        token._v = Date.now(); // stamp for debugging
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      session.user = {
+        ...session.user,
+        id: token.id as string,
+        username: (token.username as string) ?? session.user?.name ?? "",
+        role: token.role as any,
+      };
+      return session;
+    },
+  },
 });
