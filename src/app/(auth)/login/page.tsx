@@ -1,96 +1,119 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import { toast } from "sonner";
+import type React from "react"
 
-export const runtime = 'nodejs';
+import { useState } from "react"
+import { signIn } from "next-auth/react"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import Link from "next/link"
+import { toast } from "sonner"
 
+export const runtime = "nodejs"
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setLoading(true)
     const res = await signIn("credentials", {
       username,
       password,
       redirect: true,
-      // Post-login page will redirect by role
       redirectTo: "/auth/post-login",
-    });
-    setLoading(false);
+    })
+    setLoading(false)
 
     if ((res as any)?.error) {
-      toast.error("Invalid username or password.");
+      toast.error("Invalid username or password.")
     }
-  };
+  }
 
   return (
-    <div className="min-h-dvh grid place-items-center p-4">
-      <Card className="w-full max-w-md p-6 space-y-6">
-        <div className="text-center">
-          <div className="text-2xl font-semibold">POS Login</div>
-          <div className="text-sm text-muted-foreground">
-            Owner & Staff use the same screen
-          </div>
-        </div>
+    <div className="min-h-dvh relative overflow-hidden">
+      {/* Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-500 to-emerald-500" />
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid gap-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="owner1 or staff1"
-              required
-            />
-          </div>
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-emerald-300/20 rounded-full blur-2xl animate-pulse delay-1000" />
+      </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
+      {/* Main Content */}
+      <div className="relative z-10 min-h-dvh grid place-items-center p-4">
+        <Card className="w-full max-w-md p-8 space-y-8 bg-white/95 backdrop-blur-xl border-0 shadow-2xl">
+          <div className="text-center space-y-3">
+            <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">
+              POS Login
+            </div>
+            <div className="text-base text-slate-600 font-medium">Owner & Staff use the same screen</div>
           </div>
 
-          <div className="grid gap-3">
-            {/* Login Button (tile style) */}
-            <Button
-              type="submit"
-              className="h-16 text-lg rounded-2xl"
-              disabled={loading}
-            >
-              {loading ? "Logging in..." : "Login"}
-            </Button>
+          <form onSubmit={onSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-sm font-semibold text-slate-700">
+                Username
+              </Label>
+              <Input
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="owner1 or staff1"
+                className="h-12 text-base border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
+                required
+              />
+            </div>
 
-            {/* Register Button (tile style) */}
-            <Link href="/register" className="block">
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-semibold text-slate-700">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="h-12 text-base border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
+                required
+              />
+            </div>
+
+            <div className="space-y-4 pt-2">
               <Button
-                type="button"
-                variant="secondary"
-                className="h-16 w-full text-lg rounded-2xl"
+                type="submit"
+                className="h-14 w-full text-lg font-semibold rounded-xl bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
+                disabled={loading}
               >
-                Register
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Logging in...
+                  </div>
+                ) : (
+                  "Login"
+                )}
               </Button>
-            </Link>
-          </div>
-        </form>
-      </Card>
+
+              <Link href="/register" className="block">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-14 w-full text-lg font-semibold rounded-xl border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all duration-200 transform hover:scale-[1.02] bg-transparent"
+                >
+                  Register
+                </Button>
+              </Link>
+            </div>
+          </form>
+        </Card>
+      </div>
     </div>
-  );
+  )
 }

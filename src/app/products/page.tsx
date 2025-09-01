@@ -1,3 +1,4 @@
+// File: src/app/(owner)/products/page.tsx
 "use client";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
@@ -66,7 +67,7 @@ export default function ProductsPage() {
     setDrinkSize("");
   }
 
-    async function submit(){
+  async function submit() {
     if (!name || !price || !categoryId) {
       return toast.error("Name, Price, Category required");
     }
@@ -79,9 +80,9 @@ export default function ProductsPage() {
     if (foodSize) finalName += ` (${foodSize})`;
     if (drinkSize) finalName += ` (${drinkSize})`;
 
-    const payload:any = {
+    const payload: any = {
       name: finalName,
-      price: numPrice, // ensure number
+      price: numPrice,
       categoryId,
       barcode: barcode || null,
       description: description || null,
@@ -94,7 +95,7 @@ export default function ProductsPage() {
       const r = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       const data = await r.json().catch(() => ({}));
@@ -105,11 +106,10 @@ export default function ProductsPage() {
       toast.success(editingId ? "Product updated" : "Product created");
       resetForm();
       load();
-    } catch (err:any) {
+    } catch (err: any) {
       toast.error(err?.message || "Save failed");
     }
   }
-
 
   async function edit(p: Product) {
     setEditingId(p.id);
@@ -119,7 +119,6 @@ export default function ProductsPage() {
     setImageUrl(p.imageUrl ?? "");
     setPrice(String(p.price));
     setCategoryId(p.categoryId);
-    // sizes are only appended to the name; we don't parse them back out
     setFoodSize("");
     setDrinkSize("");
   }
@@ -181,16 +180,17 @@ export default function ProductsPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
+      {/* Header actions: stack on mobile */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
         <h1 className="text-2xl font-semibold">Products</h1>
-        <TileButton href="/auth/post-login" variant="outline">
+        <TileButton href="/auth/post-login" variant="outline" className="w-full sm:w-auto">
           Back
         </TileButton>
       </div>
 
       {/* Product form */}
       <Card className="p-4 space-y-3">
-        <div className="grid md:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="grid gap-1">
             <Label>Item Name</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Pizza Margherita" />
@@ -213,7 +213,11 @@ export default function ProductsPage() {
           </div>
           <div className="grid gap-1">
             <Label>Category</Label>
-            <select className="border rounded p-2" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+            <select
+              className="border rounded p-2 h-10"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+            >
               <option value="">Select...</option>
               {categories.map((c: Category) => (
                 <option key={c.id} value={c.id}>
@@ -225,14 +229,14 @@ export default function ProductsPage() {
         </div>
 
         {/* Size pickers */}
-        <div className="grid md:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <div className="mb-2 font-medium">Food Size (optional)</div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {["small", "medium", "large", "mega"].map((s) => (
                 <Button
                   key={s}
-                  className="h-14"
+                  className="h-12"
                   variant={foodSize === (s as any) ? "default" : "outline"}
                   onClick={() => {
                     setFoodSize(s as any);
@@ -250,7 +254,7 @@ export default function ProductsPage() {
               {["small", "medium", "large"].map((s) => (
                 <Button
                   key={s}
-                  className="h-14"
+                  className="h-12"
                   variant={drinkSize === (s as any) ? "default" : "outline"}
                   onClick={() => {
                     setDrinkSize(s as any);
@@ -264,9 +268,12 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <TileButton onClick={submit}>{editingId ? "Update" : "Add Item"}</TileButton>
-          <TileButton variant="destructive" onClick={resetForm}>
+        {/* Form actions: full width on mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <TileButton className="w-full" onClick={submit}>
+            {editingId ? "Update" : "Add Item"}
+          </TileButton>
+          <TileButton className="w-full" variant="destructive" onClick={resetForm}>
             Clear
           </TileButton>
         </div>
@@ -276,8 +283,9 @@ export default function ProductsPage() {
       <Card className="p-4 space-y-3">
         <h2 className="text-lg font-semibold">Product Categories</h2>
 
-        <div className="flex gap-2 items-end">
-          <div className="grid gap-1 w-full max-w-sm">
+        {/* Mobile-first: stack input & button, align at bottom on ≥sm */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+          <div className="grid gap-1 w-full sm:max-w-sm">
             <Label>New Category</Label>
             <Input
               placeholder="e.g., Pizzas / Burgers / Drinks"
@@ -285,13 +293,13 @@ export default function ProductsPage() {
               onChange={(e) => setNewCategory(e.target.value)}
             />
           </div>
-          <TileButton onClick={addCategory} className="min-w-[160px] max-w-[400px] max-h-10">
+          <TileButton onClick={addCategory} className="w-full sm:w-auto h-10">
             + Add Category
           </TileButton>
         </div>
 
-        <div className="overflow-auto border rounded">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto border rounded">
+          <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-muted/50">
               <tr>
                 <th className="p-2 text-left">Category</th>
@@ -303,11 +311,16 @@ export default function ProductsPage() {
                 <tr key={c.id} className="border-t">
                   <td className="p-2">{c.name}</td>
                   <td className="p-2">
-                    <div className="flex gap-2 justify-center">
-                      <Button size="sm" onClick={() => renameCategory(c)}>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      <Button size="sm" onClick={() => renameCategory(c)} className="w-full sm:w-auto">
                         Edit
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => deleteCategory(c.id)}>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => deleteCategory(c.id)}
+                        className="w-full sm:w-auto"
+                      >
                         Delete
                       </Button>
                     </div>
@@ -327,8 +340,8 @@ export default function ProductsPage() {
       </Card>
 
       {/* Product list */}
-      <Card className="p-0 overflow-auto">
-        <table className="w-full text-sm">
+      <Card className="p-0 overflow-x-auto">
+        <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-muted/50">
             <tr>
               <th className="p-2 text-left">Image</th>
@@ -343,18 +356,27 @@ export default function ProductsPage() {
             {products.map((p: Product) => (
               <tr key={p.id} className="border-t">
                 <td className="p-2">
-                  {p.imageUrl ? <img src={p.imageUrl} className="h-10 w-10 object-cover rounded" alt="" /> : "-"}
+                  {p.imageUrl ? (
+                    <img src={p.imageUrl} className="h-10 w-10 object-cover rounded" alt="" />
+                  ) : (
+                    "-"
+                  )}
                 </td>
                 <td className="p-2">{p.name}</td>
                 <td className="p-2">{p.barcode ?? "-"}</td>
                 <td className="p-2">{p.category?.name ?? ""}</td>
                 <td className="p-2 text-right">{p.price}</td>
                 <td className="p-2">
-                  <div className="flex gap-2 justify-center">
-                    <Button size="sm" onClick={() => edit(p)}>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <Button size="sm" onClick={() => edit(p)} className="w-full sm:w-auto">
                       Edit
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={() => del(p.id)}>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => del(p.id)}
+                      className="w-full sm:w-auto"
+                    >
                       Delete
                     </Button>
                   </div>
