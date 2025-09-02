@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import TileButton from "@/components/ui/tile-button";
-import { toast } from "sonner";
+import { ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
 
 type Product = {
   id: string;
@@ -20,6 +20,8 @@ type Product = {
 };
 
 type Category = { id: string; name: string };
+
+type Notif = { type: "success" | "error"; message: string } | null;
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -41,6 +43,13 @@ export default function ProductsPage() {
 
   // category form
   const [newCategory, setNewCategory] = useState("");
+
+  // centered popup notification
+  const [notif, setNotif] = useState<Notif>(null);
+  function showNotif(type: "success" | "error", message: string) {
+    setNotif({ type, message });
+    window.setTimeout(() => setNotif(null), 1000); // auto-hide after 1s
+  }
 
   async function load() {
     setLoading(true);
@@ -69,11 +78,11 @@ export default function ProductsPage() {
 
   async function submit() {
     if (!name || !price || !categoryId) {
-      return toast.error("Name, Price, Category required");
+      return showNotif("error", "Name, Price, Category required");
     }
     const numPrice = Number(price);
     if (Number.isNaN(numPrice) || numPrice < 0) {
-      return toast.error("Price must be a valid non-negative number");
+      return showNotif("error", "Price must be a valid non-negative number");
     }
 
     let finalName = name;
@@ -103,11 +112,11 @@ export default function ProductsPage() {
         throw new Error(data?.error || "Save failed");
       }
 
-      toast.success(editingId ? "Product updated" : "Product created");
+      showNotif("success", editingId ? "Item updated!" : "Item Added!");
       resetForm();
       load();
     } catch (err: any) {
-      toast.error(err?.message || "Save failed");
+      showNotif("error", err?.message || "Item save failed");
     }
   }
 
@@ -122,18 +131,19 @@ export default function ProductsPage() {
     setFoodSize("");
     setDrinkSize("");
   }
+
   async function del(id: string) {
     if (!confirm("Delete this product?")) return;
     const r = await fetch(`/api/products/${id}`, { method: "DELETE" });
     if (r.ok) {
-      toast.success("Deleted");
+      showNotif("success", "Product deleted");
       load();
-    } else toast.error("Delete failed");
+    } else showNotif("error", "Delete failed");
   }
 
   // ---------- Category management ----------
   async function addCategory() {
-    if (!newCategory.trim()) return toast.error("Enter a category name");
+    if (!newCategory.trim()) return showNotif("error", "Enter a category name");
     try {
       const r = await fetch("/api/categories", {
         method: "POST",
@@ -141,11 +151,11 @@ export default function ProductsPage() {
         body: JSON.stringify({ name: newCategory.trim() }),
       });
       if (!r.ok) throw new Error();
-      toast.success("Category added");
+      showNotif("success", "Category added");
       setNewCategory("");
       await load();
     } catch {
-      toast.error("Add category failed");
+      showNotif("error", "Add category failed");
     }
   }
 
@@ -159,10 +169,10 @@ export default function ProductsPage() {
         body: JSON.stringify({ name: next.trim() }),
       });
       if (!r.ok) throw new Error();
-      toast.success("Category renamed");
+      showNotif("success", "Category renamed");
       await load();
     } catch {
-      toast.error("Rename failed");
+      showNotif("error", "Rename failed");
     }
   }
 
@@ -171,10 +181,10 @@ export default function ProductsPage() {
     try {
       const r = await fetch(`/api/categories/${id}`, { method: "DELETE" });
       if (!r.ok) throw new Error();
-      toast.success("Category deleted");
+      showNotif("success", "Category deleted");
       await load();
     } catch {
-      toast.error("Delete category failed");
+      showNotif("error", "Delete category failed");
     }
   }
 
@@ -184,6 +194,7 @@ export default function ProductsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
         <h1 className="text-2xl font-semibold">Products</h1>
         <TileButton href="/auth/post-login" variant="outline" className="w-full sm:w-auto">
+          <ArrowLeft className="w-4 h-4" />
           Back
         </TileButton>
       </div>
@@ -393,6 +404,26 @@ export default function ProductsPage() {
           </tbody>
         </table>
       </Card>
+
+      {/* Centered floating notification */}
+      {notif && (
+        <div className="fixed inset-0 z-[70] grid place-items-center">
+          {/* light blur + dim backdrop */}
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
+          <Card className="relative z-[71] w-[90%] max-w-sm p-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              {notif.type === "success" ? (
+                <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+              ) : (
+                <XCircle className="h-6 w-6 text-red-500" />
+              )}
+              <div className="text-base font-medium">
+                {notif.message}
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

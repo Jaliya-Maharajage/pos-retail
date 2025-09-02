@@ -1,65 +1,90 @@
 // src/app/api/reports/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";  // Your prisma instance
-export const runtime = 'nodejs';
-// Fetch daily sales report
+import { prisma } from "@/lib/prisma";
+export const runtime = "nodejs";
+
 export async function GET(request: Request) {
   try {
-    // Get today's date (midnight today)
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);  // Midnight of today
+    const { searchParams } = new URL(request.url);
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
 
-    // Get start of the week (first day of the week)
-    const startOfWeek = new Date();
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());  // Adjust to start of the week
-    startOfWeek.setHours(0, 0, 0, 0);  // Midnight of first day of the week
+    // If a date range is provided, return a range report
+    if (from && to) {
+      // Normalize to local-day boundaries
+      const fromDate = new Date(`${from}T00:00:00.000`);
+      const toDate = new Date(`${to}T23:59:59.999`);
 
-    // Get start of the month (first day of the month)
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);  // First day of the month
-    startOfMonth.setHours(0, 0, 0, 0);  // Midnight of first day of the month
+      if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime()))
+        return NextResponse.json({ error: "Invalid date format" }, { status: 400 });
 
-    // Daily Sales (today)
-    const dailySales = await prisma.order.aggregate({
-      where: {
-        createdAt: {
-          gte: startOfDay, // Greater than or equal to today (midnight)
-        },
-      },
-      _sum: {
-        totalAmount: true,
-      },
-    });
+      // Optional: only paid orders. If you want all, remove `status: "PAID"`
+      const where = {
+        createdAt: { gte: fromDate, lte: toDate },
+        // status: "PAID",
+      } as const;
 
-    // Weekly Sales (this week)
-    const weeklySales = await prisma.order.aggregate({
-      where: {
-        createdAt: {
-          gte: startOfWeek, // Greater than or equal to start of the week
-        },
-      },
-      _sum: {
-        totalAmount: true,
-      },
-    });
+      const [orders, sum] = await Promise.all([
+        prisma.order.findMany({
+          where,
+          orderBy: { createdAt: "asc" },
+          include: {
+            customer: { select: { fullName: true, phone: true } },
+          },
+        }),
+        prisma.order.aggregate({ where, _sum: { totalAmount: true } }),
+      ]);
 
-    // Monthly Sales (this month)
-    const monthlySales = await prisma.order.aggregate({
-      where: {
-        createdAt: {
-          gte: startOfMonth, // Greater than or equal to start of the month
-        },
-      },
-      _sum: {
-        totalAmount: true,
-      },
-    });
+      return NextResponse.json({
+        totalSales: Number(sum._sum.totalAmount ?? 0),
+        orderCount: orders.length,
+        orders: orders.map((o) => ({
+          id: o.id,
+          createdAt: o.createdAt,
+          totalAmount: Number(o.totalAmount),
+          paymentMethod: o.paymentMethod,
+          saleType: o.saleType,
+          customer: o.customer,
+        })),
+      });
+    }
 
-    // Return aggregated sales data for today, this week, and this month
+    // Else: return overview (today / this week / this month)
+    const now = new Date();
+
+    // Today
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    // This week (Sunday start; switch to Monday by adjusting getDay())
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    // This month
+    const startOfMonth = new Date(now);
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const [daily, weekly, monthly] = await Promise.all([
+      prisma.order.aggregate({
+        where: { createdAt: { gte: startOfDay } },
+        _sum: { totalAmount: true },
+      }),
+      prisma.order.aggregate({
+        where: { createdAt: { gte: startOfWeek } },
+        _sum: { totalAmount: true },
+      }),
+      prisma.order.aggregate({
+        where: { createdAt: { gte: startOfMonth } },
+        _sum: { totalAmount: true },
+      }),
+    ]);
+
     return NextResponse.json({
-      dailySales: dailySales._sum.totalAmount || 0,
-      weeklySales: weeklySales._sum.totalAmount || 0,
-      monthlySales: monthlySales._sum.totalAmount || 0,
+      dailySales: Number(daily._sum.totalAmount ?? 0),
+      weeklySales: Number(weekly._sum.totalAmount ?? 0),
+      monthlySales: Number(monthly._sum.totalAmount ?? 0),
     });
   } catch (error) {
     console.error("Error fetching report data:", error);
