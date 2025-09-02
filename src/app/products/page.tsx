@@ -51,18 +51,48 @@ export default function ProductsPage() {
     window.setTimeout(() => setNotif(null), 1000); // auto-hide after 1s
   }
 
+  // async function load() {
+  //   setLoading(true);
+  //   const [p, c] = await Promise.all([fetch("/api/products"), fetch("/api/categories")]);
+  //   const pj = await p.json();
+  //   const cj = await c.json();
+  //   console.log("Products loaded:", pj);
+  //   console.log("Categories loaded:", cj);
+  //   setProducts(pj.products ?? []);
+  //   setCategories(cj.categories ?? []);
+  //   setLoading(false);
+  // }
+  // useEffect(() => {
+  //   load();
+  // }, []);
+
   async function load() {
-    setLoading(true);
-    const [p, c] = await Promise.all([fetch("/api/products"), fetch("/api/categories")]);
-    const pj = await p.json();
-    const cj = await c.json();
-    setProducts(pj.products ?? []);
-    setCategories(cj.categories ?? []);
-    setLoading(false);
-  }
-  useEffect(() => {
-    load();
-  }, []);
+  setLoading(true);
+
+  const [p, c] = await Promise.all([fetch("/api/products"), fetch("/api/categories")]);
+  const pj = await p.json();
+  const cj = await c.json();
+
+  const rawProducts: Product[] = pj.products ?? [];
+  const cats: Category[] = cj.categories ?? [];
+
+  // Build a quick lookup map: categoryId -> Category
+  const catMap = new Map<string, Category>(cats.map((x) => [x.id, x]));
+
+  // Attach the category object to each product (for table display)
+  const withCategory: Product[] = rawProducts.map((prod) => ({
+    ...prod,
+    category: catMap.get(prod.categoryId) ?? undefined,
+  }));
+
+  setProducts(withCategory);
+  setCategories(cats);
+  setLoading(false);
+}
+useEffect(() => {
+     load();
+   }, []);
+
 
   function resetForm() {
     setEditingId(null);
@@ -136,9 +166,9 @@ export default function ProductsPage() {
     if (!confirm("Delete this product?")) return;
     const r = await fetch(`/api/products/${id}`, { method: "DELETE" });
     if (r.ok) {
-      showNotif("success", "Product deleted");
+      showNotif("success", "Item deleted!");
       load();
-    } else showNotif("error", "Delete failed");
+    } else showNotif("error", "Item Delete failed!");
   }
 
   // ---------- Category management ----------
@@ -151,11 +181,11 @@ export default function ProductsPage() {
         body: JSON.stringify({ name: newCategory.trim() }),
       });
       if (!r.ok) throw new Error();
-      showNotif("success", "Category added");
+      showNotif("success", "Category added!");
       setNewCategory("");
       await load();
     } catch {
-      showNotif("error", "Add category failed");
+      showNotif("error", "Add category failed!");
     }
   }
 
@@ -169,10 +199,10 @@ export default function ProductsPage() {
         body: JSON.stringify({ name: next.trim() }),
       });
       if (!r.ok) throw new Error();
-      showNotif("success", "Category renamed");
+      showNotif("success", "Category renamed!");
       await load();
     } catch {
-      showNotif("error", "Rename failed");
+      showNotif("error", "Rename failed!");
     }
   }
 
@@ -181,10 +211,10 @@ export default function ProductsPage() {
     try {
       const r = await fetch(`/api/categories/${id}`, { method: "DELETE" });
       if (!r.ok) throw new Error();
-      showNotif("success", "Category deleted");
+      showNotif("success", "Category deleted!");
       await load();
     } catch {
-      showNotif("error", "Delete category failed");
+      showNotif("error", "Delete category failed!");
     }
   }
 
