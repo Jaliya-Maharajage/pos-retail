@@ -13,28 +13,34 @@ enum UserRole {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  fullName     String
-  nic          String
-  mobileNumber String
-  email        String   @unique
-  username     String   @unique
-  passwordHash String
-  role         UserRole
-  createdAt    DateTime @default(now())
+  id                 String    @id @default(uuid())
+  fullName           String
+  nic                String
+  mobileNumber       String
+  email              String    @unique
+  username           String    @unique
+  passwordHash       String
+  role               UserRole
+  createdAt          DateTime  @default(now())
 
-  // 👇 Back-relation for orders created by this staff user (no DB change)
-  staffOrders Order[] @relation("StaffOrders")
+  // Inline reset token (simple)
+  resetToken         String?   @unique
+  resetTokenExpires  DateTime?
+  @@index([resetToken])
+
+  // Orders created by this staff user
+  staffOrders        Order[]   @relation("StaffOrders")
 }
 
 model Customer {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   fullName  String
   phone     String
-  email     String?  @unique
-  createdAt DateTime @default(now())
+  email     String?   @unique
+  createdAt DateTime  @default(now())
 
-  orders Order[]
+  @@index([phone])               // quick lookups by phone
+  orders    Order[]
 }
 
 model Category {
@@ -45,44 +51,55 @@ model Category {
 }
 
 model Product {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   name        String
   price       Float
   description String?
-  barcode     String? @unique
+  barcode     String?   @unique
   imageUrl    String?
   categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
-  createdAt   DateTime @default(now())
+  category    Category  @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime  @default(now())
 
-  items OrderItem[]
+  @@index([name])
+  @@index([barcode])
+  items       OrderItem[]
 }
 
 model Order {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  totalAmount Float
-  status      String   @default("PENDING")
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  totalAmount   Float
+  status        String    @default("PENDING")
 
   paymentMethod String?
   saleType      String?
 
-  staffId String
-  staff   User   @relation("StaffOrders", fields: [staffId], references: [id])
+  staffId   String
+  staff     User      @relation("StaffOrders", fields: [staffId], references: [id])
 
   customerId String
-  customer   Customer @relation(fields: [customerId], references: [id])
+  customer   Customer  @relation(fields: [customerId], references: [id])
 
-  items OrderItem[]
+  // CASCADE so deleting an order removes its OrderItems (prevents FK errors)
+  items      OrderItem[]
+
+  @@index([createdAt])
+  @@index([staffId])
+  @@index([customerId])
 }
 
 model OrderItem {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   orderId   String
   productId String
   quantity  Int
   price     Float
 
-  order   Order   @relation(fields: [orderId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  // Cascade on order delete; restrict product delete if referenced (safer)
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
 }

@@ -128,7 +128,7 @@ export default function RegisterPage() {
           >
             Register User
           </h1>
-          <p className="text-white/80 text-base">Register as Owner or Staff</p>
+          <p className="text-white/80 text-base">Choose your Role and Register!</p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-6">

@@ -9,22 +9,30 @@ export default auth((req) => {
   const isAuth = !!req.auth;
   const role = req.auth?.user?.role;
 
-  // Public paths (allow)
-  const publicPaths = ["/login", "/register", "/api/auth", "/api/register", "/_next", "/favicon.ico"];
-  if (publicPaths.some((p) => path.startsWith(p))) {
-    // If already logged in and visiting login/register, bounce to role redirect page
+  const publicPrefixes = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",        // <-- allow both /reset-password and /reset-password/<token>
+    "/api/auth",
+    "/api/auth/forgot",       // <-- forgot API
+    "/api/auth/reset",        // <-- reset API
+    "/api/register",
+    "/_next",
+    "/favicon.ico",
+  ];
+
+  if (publicPrefixes.some((p) => path.startsWith(p))) {
     if (isAuth && (path === "/login" || path === "/register")) {
       return NextResponse.redirect(new URL("/auth/post-login", nextUrl));
     }
     return NextResponse.next();
   }
 
-  // Require auth elsewhere
   if (!isAuth) {
     return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
-  // Owner-only sections
   if (path.startsWith("/owner") || path.startsWith("/products") || path.startsWith("/reports")) {
     if (role !== "OWNER") {
       return NextResponse.redirect(new URL("/staff", nextUrl));
@@ -35,6 +43,9 @@ export default auth((req) => {
 });
 
 export const config = {
-  // Don't run on static assets or the NextAuth API
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/auth|api/register).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|api/auth|api/auth/forgot|api/auth/reset|api/register).*)",
+    "/(owner|staff)/:path*",
+    "/pos/:path*",
+  ],
 };

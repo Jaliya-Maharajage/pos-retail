@@ -1,38 +1,37 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
+import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
+import { toast } from "sonner";
 
-import { useState } from "react"
-import { signIn } from "next-auth/react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Link from "next/link"
-import { toast } from "sonner"
-
-export const runtime = "nodejs"
+export const runtime = "nodejs";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     const res = await signIn("credentials", {
       username,
       password,
       redirect: true,
-      redirectTo: "/auth/post-login",
-    })
-    setLoading(false)
+      callbackUrl: "/auth/post-login", // ✅ use callbackUrl
+    });
+    setLoading(false);
 
     if ((res as any)?.error) {
-      toast.error("Invalid username or password.")
+      toast.error("Invalid username or password.");
     }
-  }
+  };
 
   return (
     <div className="min-h-dvh relative overflow-hidden">
@@ -52,7 +51,9 @@ export default function LoginPage() {
             <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">
               POS Login
             </div>
-            <div className="text-base text-slate-600 font-medium">Owner & Staff use the same screen</div>
+            <div className="text-base text-slate-600 font-medium">
+              Welcome back! J-POS Solutions.
+            </div>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-6">
@@ -67,6 +68,7 @@ export default function LoginPage() {
                 placeholder="owner1 or staff1"
                 className="h-12 text-base border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
                 required
+                autoComplete="username"
               />
             </div>
 
@@ -82,7 +84,20 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 className="h-12 text-base border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
                 required
+                autoComplete="current-password"
               />
+            </div>
+
+            {/* Forgot password link (inside form but not a submit) */}
+            <div className="flex items-center justify-between">
+              <Link
+                href="/forgot-password"
+                //if you trying to send a email to reset password, change the href to /forgot-password
+                prefetch={false}
+                className="text-sm text-primary hover:underline"
+              >
+                Forgot password?
+              </Link>
             </div>
 
             <div className="space-y-4 pt-2">
@@ -101,7 +116,7 @@ export default function LoginPage() {
                 )}
               </Button>
 
-              <Link href="/register" className="block">
+              <Link href="/register" prefetch={false} className="block">
                 <Button
                   type="button"
                   variant="outline"
@@ -115,5 +130,5 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
