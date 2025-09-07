@@ -1,64 +1,56 @@
+// src/app/api/auth/forgot/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { sendMail } from "@/lib/mail";
+import prisma from "@/lib/prisma";
+import { Resend } from "resend";
 import crypto from "crypto";
+
+const resend = new Resend(process.env.RESEND_API_KEY!);
+const urlBase = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
 export async function POST(req: Request) {
   try {
-    const { email, username } = await req.json();
+    const { identifier } = await req.json(); // can be email OR username
+    const id = String(identifier ?? "").trim();
+    if (!id) return NextResponse.json({ error: "Username or email required" }, { status: 400 });
 
-    if (!email && !username) {
-      return NextResponse.json(
-        { error: "Email or username required" },
-        { status: 400 }
-      );
-    }
-
-    // Look up user
+    // case-insensitive match on either email or username
     const user = await prisma.user.findFirst({
       where: {
-        OR: [{ email }, { username }],
+        OR: [
+          { email: { equals: id, mode: "insensitive" } },
+          { username: { equals: id, mode: "insensitive" } },
+        ],
       },
     });
 
-    if (!user) {
-      return NextResponse.json(
-        { message: "If account exists, reset link sent" },
-        { status: 200 }
-      );
-    }
+    // Always respond 200 to avoid user enumeration
+    if (!user) return NextResponse.json({ ok: true });
 
-    // Generate token
     const token = crypto.randomBytes(32).toString("hex");
-    const expiry = new Date(Date.now() + 1000 * 60 * 15); // 15 minutes
+    const expires = new Date(Date.now() + 1000 * 60 * 30); // 30 minutes
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { resetToken: token, resetTokenExpires: expiry },
+      data: { resetToken: token, resetTokenExpires: expires },
     });
 
-    // Build reset link
-    const urlBase = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-    const href = `${urlBase}/reset-password?token=${encodeURIComponent(token)}`;
+    const href = `${urlBase.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(token)}`;
 
-    // Send email
-    await sendMail({
+    await resend.emails.send({
+      from: process.env.EMAIL_FROM!, // e.g. "POS App <no-reply@yourdomain.com>"
       to: user.email,
-      subject: "Password Reset Request",
+      subject: "Reset your password",
       html: `
-        <p>Hello ${user.fullName},</p>
-        <p>Click below to reset your password:</p>
-        <p><a href="${href}" target="_blank">${href}</a></p>
-        <p>This link will expire in 15 minutes.</p>
+        <p>Hi ${user.fullName ?? user.username},</p>
+        <p>Click the button below to reset your password (valid for 30 minutes):</p>
+        <p><a href="${href}" style="display:inline-block;padding:10px 16px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none">Reset Password</a></p>
+        <p>Or copy this link: ${href}</p>
       `,
     });
 
-    return NextResponse.json({ message: "Reset link sent" });
-  } catch (err: any) {
-    console.error("Forgot password error:", err);
-    return NextResponse.json(
-      { error: "Failed to send reset email" },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ error: "Failed to send reset email" }, { status: 500 });
   }
 }

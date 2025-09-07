@@ -21,7 +21,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     const res = await signIn("credentials", {
-      username,
+      username: username.trim().toLowerCase(),//changed here
       password,
       redirect: true,
       callbackUrl: "/auth/post-login", // ✅ use callbackUrl

@@ -36,7 +36,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "prisma/**/*.ts"
-  ],
+, "src/app/api/register/route.ts.backup", "src/app/api/auth/forgot/route.ts.backup"  ],
   "exclude": [
     "node_modules"
   ]

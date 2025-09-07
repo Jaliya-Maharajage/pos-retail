@@ -188,7 +188,7 @@ export default function RegisterPage() {
                 id="ownerCode"
                 value={ownerCode}
                 onChange={(e) => setOwnerCode(e.target.value)}
-                placeholder="Enter OwnerCode"
+                placeholder="Enter Owner Code"
                 required={role === "OWNER"}
                 className="h-12 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500 transition-all duration-300 hover:bg-gray-100 focus:ring-2 focus:ring-blue-400/50"
               />
