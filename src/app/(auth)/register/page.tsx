@@ -1,55 +1,62 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { toast } from "sonner"
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { toast } from "sonner";
 
-type Role = "OWNER" | "STAFF"
-export const runtime = "nodejs"
+type Role = "OWNER" | "STAFF";
+// (runtime hint isn’t needed for client components, but safe to keep)
+// export const runtime = "nodejs";
 
 export default function RegisterPage() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const [role, setRole] = useState<Role>("STAFF")
-  const [fullName, setFullName] = useState("")
-  const [nic, setNic] = useState("")
-  const [mobileNumber, setMobileNumber] = useState("")
-  const [email, setEmail] = useState("")
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [ownerCode, setOwnerCode] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [role, setRole] = useState<Role>("STAFF");
+  const [fullName, setFullName] = useState("");
+  const [nic, setNic] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [ownerCode, setOwnerCode] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    // Basic client validation for length constraints
+    // Basic validation
     if (username.length < 8 || username.length > 10) {
-      toast.error("Username must be 8–10 characters.")
-      return
+      toast.error("Username must be 8–10 characters.");
+      return;
     }
     if (password.length < 8 || password.length > 10) {
-      toast.error("Password must be 8–10 characters.")
-      return
+      toast.error("Password must be 8–10 characters.");
+      return;
     }
-    if (role === "OWNER" && !ownerCode) {
-      toast.error("OwnerCode is required for Owner registration.")
-      return
+    if (role === "OWNER" && !ownerCode.trim()) {
+      toast.error("OwnerCode is required for Owner registration.");
+      return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true)
       const res = await fetch("/api/register", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           role,
           fullName,
@@ -58,35 +65,34 @@ export default function RegisterPage() {
           email,
           username,
           password,
-          ownerCode: role === "OWNER" ? ownerCode : undefined,
+          ownerCode: role === "OWNER" ? ownerCode.trim() : undefined,
         }),
-      })
+      });
 
-      const data = await res.json()
+      // Parse JSON safely
+      const data = await res.json().catch(() => ({}));
 
-      if (!res.ok || !data?.ok) {
-        toast.error(data?.error ?? "Registration failed")
-        setLoading(false)
-        return
+      // Accept success when HTTP is ok AND data.ok is not explicitly false
+      if (res.ok && data?.ok !== false) {
+        toast.success(
+          role === "STAFF"
+            ? "Staff user successfully registered!"
+            : "Owner user successfully registered!"
+        );
+        // Optional redirect after a short pause
+        setTimeout(() => router.push("/login"), 900);
+        return;
       }
 
-      // Success messages required (exact wording)
-      if (role === "STAFF") {
-        toast.success("Staff User Successfully Regsitered!")
-      } else {
-        toast.success("Owner User Successfully Regsitered!")
-      }
-
-      // Optional: small delay then return to login
-      setTimeout(() => {
-        router.push("/login")
-      }, 1200)
-    } catch {
-      toast.error("Server error, please try again.")
+      // Show server error message if present
+      toast.error(data?.error || "Registration failed");
+    } catch (err) {
+      toast.error("Network error. Please try again.");
+      console.error(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div
@@ -101,18 +107,18 @@ export default function RegisterPage() {
           className={`absolute -top-40 -right-40 w-80 h-80 rounded-full opacity-20 animate-pulse transition-colors duration-1000 ${
             role === "OWNER" ? "bg-blue-300" : "bg-teal-300"
           }`}
-        ></div>
+        />
         <div
           className={`absolute -bottom-40 -left-40 w-96 h-96 rounded-full opacity-15 animate-pulse delay-1000 transition-colors duration-1000 ${
             role === "OWNER" ? "bg-emerald-300" : "bg-green-300"
           }`}
-        ></div>
+        />
         <div
-          className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full opacity-10 animate-spin transition-colors duration-1000 ${
+          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full opacity-10 animate-spin transition-colors duration-1000 ${
             role === "OWNER" ? "bg-cyan-400" : "bg-teal-400"
           }`}
           style={{ animationDuration: "20s" }}
-        ></div>
+        />
       </div>
 
       <Card className="w-full max-w-2xl p-8 space-y-6 bg-white border-0 shadow-2xl transition-all duration-700">
@@ -189,7 +195,7 @@ export default function RegisterPage() {
                 value={ownerCode}
                 onChange={(e) => setOwnerCode(e.target.value)}
                 placeholder="Enter Owner Code"
-                required={role === "OWNER"}
+                required
                 className="h-12 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500 transition-all duration-300 hover:bg-gray-100 focus:ring-2 focus:ring-blue-400/50"
               />
             </div>
@@ -273,7 +279,7 @@ export default function RegisterPage() {
             >
               {loading ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Registering...
                 </div>
               ) : (
@@ -294,5 +300,5 @@ export default function RegisterPage() {
         </form>
       </Card>
     </div>
-  )
+  );
 }
