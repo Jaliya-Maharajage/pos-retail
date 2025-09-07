@@ -92,61 +92,57 @@ export default function RegisterPage() {
     <div
       className={`min-h-dvh grid place-items-center p-4 relative overflow-hidden transition-all duration-1000 ${
         role === "OWNER"
-          ? "bg-gradient-to-br from-red-500 via-orange-500 to-yellow-500"
-          : "bg-gradient-to-br from-orange-400 via-yellow-400 to-amber-400"
+          ? "bg-gradient-to-br from-blue-600 via-cyan-500 to-emerald-500"
+          : "bg-gradient-to-br from-blue-400 via-teal-400 to-green-400"
       }`}
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           className={`absolute -top-40 -right-40 w-80 h-80 rounded-full opacity-20 animate-pulse transition-colors duration-1000 ${
-            role === "OWNER" ? "bg-red-300" : "bg-orange-300"
+            role === "OWNER" ? "bg-blue-300" : "bg-teal-300"
           }`}
         ></div>
         <div
           className={`absolute -bottom-40 -left-40 w-96 h-96 rounded-full opacity-15 animate-pulse delay-1000 transition-colors duration-1000 ${
-            role === "OWNER" ? "bg-yellow-300" : "bg-amber-300"
+            role === "OWNER" ? "bg-emerald-300" : "bg-green-300"
           }`}
         ></div>
         <div
           className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full opacity-10 animate-spin transition-colors duration-1000 ${
-            role === "OWNER" ? "bg-orange-400" : "bg-yellow-400"
+            role === "OWNER" ? "bg-cyan-400" : "bg-teal-400"
           }`}
           style={{ animationDuration: "20s" }}
         ></div>
       </div>
 
-      <Card
-        className={`w-full max-w-2xl p-8 space-y-6 backdrop-blur-xl border-0 shadow-2xl transition-all duration-700 ${
-          role === "OWNER" ? "bg-white/10 shadow-red-500/20" : "bg-white/15 shadow-orange-500/20"
-        }`}
-      >
+      <Card className="w-full max-w-2xl p-8 space-y-6 bg-white border-0 shadow-2xl transition-all duration-700">
         <div className="text-center space-y-2">
           <h1
             className={`text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent transition-all duration-700 ${
-              role === "OWNER" ? "from-red-100 to-yellow-100" : "from-orange-100 to-amber-100"
+              role === "OWNER" ? "from-blue-600 to-emerald-600" : "from-blue-500 to-green-500"
             }`}
           >
             Register User
           </h1>
-          <p className="text-white/80 text-base">Choose your Role and Register!</p>
+          <p className="text-gray-600 text-base">Register as Owner or Staff</p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-6">
           <div className="grid gap-3">
-            <Label className="text-white/90 font-medium text-base">Role</Label>
+            <Label className="text-gray-700 font-medium text-base">Role</Label>
             <Select value={role} onValueChange={(v: Role) => setRole(v)}>
               <SelectTrigger
-                className={`h-14 bg-white/10 border-white/20 text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/15 focus:ring-2 ${
-                  role === "OWNER" ? "focus:ring-red-400/50" : "focus:ring-orange-400/50"
+                className={`h-14 bg-gray-50 border-gray-200 text-gray-900 transition-all duration-300 hover:bg-gray-100 focus:ring-2 ${
+                  role === "OWNER" ? "focus:ring-blue-400/50" : "focus:ring-teal-400/50"
                 }`}
               >
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
-              <SelectContent className="bg-white/95 backdrop-blur-xl border-white/20">
-                <SelectItem value="OWNER" className="hover:bg-red-50">
+              <SelectContent className="bg-white border-gray-200">
+                <SelectItem value="OWNER" className="hover:bg-blue-50">
                   Owner
                 </SelectItem>
-                <SelectItem value="STAFF" className="hover:bg-orange-50">
+                <SelectItem value="STAFF" className="hover:bg-teal-50">
                   Staff
                 </SelectItem>
               </SelectContent>
@@ -154,7 +150,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="grid gap-3">
-            <Label htmlFor="fullName" className="text-white/90 font-medium">
+            <Label htmlFor="fullName" className="text-gray-700 font-medium">
               Full Name
             </Label>
             <Input
@@ -162,14 +158,14 @@ export default function RegisterPage() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
-              className={`h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 backdrop-blur-sm transition-all duration-300 hover:bg-white/15 focus:ring-2 ${
-                role === "OWNER" ? "focus:ring-red-400/50" : "focus:ring-orange-400/50"
+              className={`h-12 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500 transition-all duration-300 hover:bg-gray-100 focus:ring-2 ${
+                role === "OWNER" ? "focus:ring-blue-400/50" : "focus:ring-teal-400/50"
               }`}
             />
           </div>
 
           <div className="grid gap-3">
-            <Label htmlFor="nic" className="text-white/90 font-medium">
+            <Label htmlFor="nic" className="text-gray-700 font-medium">
               NIC
             </Label>
             <Input
@@ -177,15 +173,15 @@ export default function RegisterPage() {
               value={nic}
               onChange={(e) => setNic(e.target.value)}
               required
-              className={`h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 backdrop-blur-sm transition-all duration-300 hover:bg-white/15 focus:ring-2 ${
-                role === "OWNER" ? "focus:ring-red-400/50" : "focus:ring-orange-400/50"
+              className={`h-12 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500 transition-all duration-300 hover:bg-gray-100 focus:ring-2 ${
+                role === "OWNER" ? "focus:ring-blue-400/50" : "focus:ring-teal-400/50"
               }`}
             />
           </div>
 
           {role === "OWNER" && (
             <div className="grid gap-3 animate-in slide-in-from-top-2 duration-500">
-              <Label htmlFor="ownerCode" className="text-white/90 font-medium">
+              <Label htmlFor="ownerCode" className="text-gray-700 font-medium">
                 OwnerCode
               </Label>
               <Input
@@ -194,13 +190,13 @@ export default function RegisterPage() {
                 onChange={(e) => setOwnerCode(e.target.value)}
                 placeholder="Enter OwnerCode"
                 required={role === "OWNER"}
-                className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 backdrop-blur-sm transition-all duration-300 hover:bg-white/15 focus:ring-2 focus:ring-red-400/50"
+                className="h-12 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500 transition-all duration-300 hover:bg-gray-100 focus:ring-2 focus:ring-blue-400/50"
               />
             </div>
           )}
 
           <div className="grid gap-3">
-            <Label htmlFor="mobileNumber" className="text-white/90 font-medium">
+            <Label htmlFor="mobileNumber" className="text-gray-700 font-medium">
               Mobile Number
             </Label>
             <Input
@@ -208,14 +204,14 @@ export default function RegisterPage() {
               value={mobileNumber}
               onChange={(e) => setMobileNumber(e.target.value)}
               required
-              className={`h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 backdrop-blur-sm transition-all duration-300 hover:bg-white/15 focus:ring-2 ${
-                role === "OWNER" ? "focus:ring-red-400/50" : "focus:ring-orange-400/50"
+              className={`h-12 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500 transition-all duration-300 hover:bg-gray-100 focus:ring-2 ${
+                role === "OWNER" ? "focus:ring-blue-400/50" : "focus:ring-teal-400/50"
               }`}
             />
           </div>
 
           <div className="grid gap-3">
-            <Label htmlFor="email" className="text-white/90 font-medium">
+            <Label htmlFor="email" className="text-gray-700 font-medium">
               Email
             </Label>
             <Input
@@ -224,14 +220,14 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className={`h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 backdrop-blur-sm transition-all duration-300 hover:bg-white/15 focus:ring-2 ${
-                role === "OWNER" ? "focus:ring-red-400/50" : "focus:ring-orange-400/50"
+              className={`h-12 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500 transition-all duration-300 hover:bg-gray-100 focus:ring-2 ${
+                role === "OWNER" ? "focus:ring-blue-400/50" : "focus:ring-teal-400/50"
               }`}
             />
           </div>
 
           <div className="grid gap-3">
-            <Label htmlFor="username" className="text-white/90 font-medium">
+            <Label htmlFor="username" className="text-gray-700 font-medium">
               Username (8–10 chars)
             </Label>
             <Input
@@ -241,14 +237,14 @@ export default function RegisterPage() {
               minLength={8}
               maxLength={10}
               required
-              className={`h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 backdrop-blur-sm transition-all duration-300 hover:bg-white/15 focus:ring-2 ${
-                role === "OWNER" ? "focus:ring-red-400/50" : "focus:ring-orange-400/50"
+              className={`h-12 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500 transition-all duration-300 hover:bg-gray-100 focus:ring-2 ${
+                role === "OWNER" ? "focus:ring-blue-400/50" : "focus:ring-teal-400/50"
               }`}
             />
           </div>
 
           <div className="grid gap-3">
-            <Label htmlFor="password" className="text-white/90 font-medium">
+            <Label htmlFor="password" className="text-gray-700 font-medium">
               Password (8–10 chars)
             </Label>
             <Input
@@ -259,8 +255,8 @@ export default function RegisterPage() {
               minLength={8}
               maxLength={10}
               required
-              className={`h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 backdrop-blur-sm transition-all duration-300 hover:bg-white/15 focus:ring-2 ${
-                role === "OWNER" ? "focus:ring-red-400/50" : "focus:ring-orange-400/50"
+              className={`h-12 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500 transition-all duration-300 hover:bg-gray-100 focus:ring-2 ${
+                role === "OWNER" ? "focus:ring-blue-400/50" : "focus:ring-teal-400/50"
               }`}
             />
           </div>
@@ -270,8 +266,8 @@ export default function RegisterPage() {
               type="submit"
               className={`h-16 text-lg rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 role === "OWNER"
-                  ? "bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 shadow-lg shadow-red-500/25"
-                  : "bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 shadow-lg shadow-orange-500/25"
+                  ? "bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 shadow-lg shadow-blue-500/25"
+                  : "bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 shadow-lg shadow-teal-500/25"
               }`}
               disabled={loading}
             >
@@ -289,7 +285,7 @@ export default function RegisterPage() {
               <Button
                 type="button"
                 variant="secondary"
-                className="h-16 w-full text-lg rounded-2xl font-semibold bg-white/20 hover:bg-white/30 text-white border-white/30 transition-all duration-300 transform hover:scale-105 active:scale-95 backdrop-blur-sm"
+                className="h-16 w-full text-lg rounded-2xl font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200 transition-all duration-300 transform hover:scale-105 active:scale-95"
               >
                 Back
               </Button>
